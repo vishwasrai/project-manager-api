@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -8,11 +8,11 @@
 		<version>2.1.5.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.fse.projectmanager</groupId>
+	<groupId>com.fsd.projectmanager</groupId>
 	<artifactId>project-manager-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>project-manager-api</name>
-	<description>Project manager API project for Spring Boot</description>
+	<description>FSD Spring Boot project for Project management</description>
 
 	<properties>
 		<java.version>1.8</java.version>
@@ -66,7 +66,9 @@
 				<version>0.8.2</version>
 				<configuration>
 					<excludes>
-						<exclude>**/*com.fse.projectmanager.projectmanagerapi/ProjectManagerApiApplication.class</exclude>
+						<exclude>**/*com/fsd/projectmanager/FsdCbaApiApplication.class</exclude>
+						<exclude>**/*com/fsd/projectmanager/dto/*</exclude>
+						<exclude>**/*com/fsd/projectmanager/entity/*</exclude>
 					</excludes>
 				</configuration>
 				<executions>
