@@ -14,6 +14,9 @@ public class TaskDto {
     private Integer priority;
     private String startDate;
     private String endDate;
+    private Integer userId;
+    private String userFirstName;
+    private String userLastName;
     private String status;
     private Integer parentTaskId;
     private String parentTaskName;
@@ -27,14 +30,16 @@ public class TaskDto {
         this.task = task;
     }
 
-    public TaskDto(Integer taskId, String task, Boolean thisIsParent, Integer priority, Integer parentTaskId, String startDate, String endDate,  String status) {
+    public TaskDto(Integer taskId, String task, Boolean thisIsParent, Integer priority, Integer parentTaskId, String startDate, String endDate, Integer userId, String status) {
         this.taskId = taskId;
+        this.projectId = projectId;
         this.task = task;
         this.thisIsParent = thisIsParent;
         this.priority = priority;
         this.parentTaskId = parentTaskId;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.userId = userId;
         this.status = status;
     }
 }

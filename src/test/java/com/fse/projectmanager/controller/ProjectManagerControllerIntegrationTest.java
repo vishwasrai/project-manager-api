@@ -3,10 +3,13 @@ package com.fse.projectmanager.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fse.projectmanager.ProjectManagerApiApplication;
 import com.fse.projectmanager.dto.TaskDto;
+import com.fse.projectmanager.dto.UserDto;
 import com.fse.projectmanager.entity.ParentTask;
 import com.fse.projectmanager.entity.Task;
+import com.fse.projectmanager.entity.User;
 import com.fse.projectmanager.repository.ParentTaskRepository;
 import com.fse.projectmanager.repository.TaskRepository;
+import com.fse.projectmanager.repository.UserRepository;
 import com.fse.projectmanager.service.ProjectManagerService;
 import com.fse.projectmanager.utils.DateConverter;
 import org.junit.*;
@@ -45,18 +48,27 @@ public class ProjectManagerControllerIntegrationTest {
     @Autowired
     private ProjectManagerService projectManagerService;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private ParentTaskRepository parentTaskRepository;
     @Autowired
     private TaskRepository taskRepository;
 
+    User userToDelete;
+    User manager;
     ParentTask parentTask;
     Task taskToDelete;
     Task taskWithParent;
     Task task;
     Task taskToUpdate;
 
+
     @Before
     public void setup() {
+        userToDelete = userRepository.save(getMockUser(null, "Blah", "Test", "10", null));
+        manager = userRepository.save(getMockUser(null, "Blah Blah", "Manager", "11", null));
+
+        userRepository.save(getMockUser(null, "Test", "Test", "13", null));
         parentTask = parentTaskRepository.save(getMockParentTask(null, "Default Task"));
         task = taskRepository.save(getMockTask(null, "Default Task", DateConverter.convert("2019-01-01"), null, 1, "completed", null));
         taskToUpdate = taskRepository.save(getMockTask(null, "Task with same end date", DateConverter.convert("2019-01-01"), DateConverter.convert("2019-01-01"), 1, null,  null));
@@ -64,12 +76,83 @@ public class ProjectManagerControllerIntegrationTest {
         taskRepository.save(getMockTask(null, "Task with future end date", DateConverter.convert("2019-01-01"), DateConverter.convert("2025-02-01"), 1, null, null));
         task = taskRepository.findById(task.getTaskId()).get();
         taskWithParent = taskRepository.save(getMockTask(null, "Default Task One", DateConverter.convert("2019-01-01"), null, 1, null,  task));
-        taskToDelete = taskRepository.save(getMockTask(null, "Default Task Two", DateConverter.convert("2019-01-01"), null, 1, null, null));
+        taskToDelete = taskRepository.save(getMockTask(null, "Default Task Two", DateConverter.convert("2019-01-01"), null, 1, null,  null));
+        // With Task
+        userRepository.save(getMockUser(null, "Test Task", "Test", "14", taskToUpdate));
+    }
+
+    @Test
+    public void testASaveUser() throws Exception {
+        UserDto userDto = new UserDto(null, "Blah", "Test", "10");
+        mvc.perform(MockMvcRequestBuilders
+                .post("/saveUser")
+                .content(asJsonString(userDto))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data.userId", greaterThan(0)));
+
+    }
+
+    @Test
+    public void testASaveUserError() throws Exception {
+        UserDto userDto = new UserDto(null, null, null, null);
+        mvc.perform(MockMvcRequestBuilders
+                .post("/saveUser")
+                .content(asJsonString(userDto))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.result", is("failure")));
+    }
+
+    @Test
+    public void testAGetAllUsers() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/getAllUsers")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.result", is("success")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.dataList", hasSize(greaterThan(0))));
+    }
+
+    @Test
+    public void testAGetAvailableUsersForTask() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/getAvailableUsersForTask")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.result", is("success")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.dataList", hasSize(greaterThan(0))));
+    }
+
+    @Test
+    public void testADeleteUserById() throws Exception {
+        Integer userId = userToDelete.getUserId();
+        mvc.perform(MockMvcRequestBuilders.delete("/deleteUserById/" + userId)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.result", is("success")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data", is(true)));
+    }
+
+    @Test
+    public void testADeleteUserByIdFailure() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.delete("/deleteUserById/1000")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.result", is("failure")));
+    }
+
+    @Test
+    public void testADeleteUserByIdFailureForZero() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.delete("/deleteUserById/0")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.result", is("failure")));
     }
 
     @Test
     public void testCSaveTask() throws Exception {
-        TaskDto taskDto = new TaskDto(null, "Test Task", false, 1, null, "2019-05-30", null, null);
+        TaskDto taskDto = new TaskDto(null, "Test Task", false, 1, null, "2019-05-30", null, manager.getUserId(), null);
         mvc.perform(MockMvcRequestBuilders
                 .post("/saveTask")
                 .content(asJsonString(taskDto))
@@ -81,7 +164,7 @@ public class ProjectManagerControllerIntegrationTest {
     }
     @Test
     public void testCUpdateTask() throws Exception {
-        TaskDto taskDto = new TaskDto(taskToUpdate.getTaskId(), "Test Task", false, 1, null, "2019-05-30", null, null);
+        TaskDto taskDto = new TaskDto(taskToUpdate.getTaskId(), "Test Task", false, 1, null, "2019-05-30", null, manager.getUserId(), null);
         mvc.perform(MockMvcRequestBuilders
                 .post("/saveTask")
                 .content(asJsonString(taskDto))
@@ -93,7 +176,7 @@ public class ProjectManagerControllerIntegrationTest {
     }
     @Test
     public void testCSaveTaskWIthParent() throws Exception {
-        TaskDto taskDto = new TaskDto(null, "Test Task", false, 1, task.getTaskId(), "2019-05-30", null, null);
+        TaskDto taskDto = new TaskDto(null, "Test Task", false, 1, task.getTaskId(), "2019-05-30", null, manager.getUserId(), null);
         mvc.perform(MockMvcRequestBuilders
                 .post("/saveTask")
                 .content(asJsonString(taskDto))
@@ -105,7 +188,7 @@ public class ProjectManagerControllerIntegrationTest {
     }
     @Test
     public void testCSaveTaskWIthParentBlak() throws Exception {
-        TaskDto taskDto = new TaskDto(null,"Test Task", false, 1, null, "2019-05-30", null,  null);
+        TaskDto taskDto = new TaskDto(null, "Test Task", false, 1, null, "2019-05-30", null, manager.getUserId(), null);
         mvc.perform(MockMvcRequestBuilders
                 .post("/saveTask")
                 .content(asJsonString(taskDto))
@@ -117,7 +200,7 @@ public class ProjectManagerControllerIntegrationTest {
     }
     @Test
     public void testCSaveTaskThisIsParent() throws Exception {
-        TaskDto taskDto = new TaskDto(null, "Test Task", true, 1, null, "2019-05-30", null, null);
+        TaskDto taskDto = new TaskDto(null, "Test Task", true, 1, null, "2019-05-30", null, manager.getUserId(), null);
         mvc.perform(MockMvcRequestBuilders
                 .post("/saveTask")
                 .content(asJsonString(taskDto))
@@ -164,6 +247,16 @@ public class ProjectManagerControllerIntegrationTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private User getMockUser(Integer userId, String firstName, String lastName, String employeeID, Task task) {
+        User user = new User();
+        user.setUserId(userId);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setEmployeeId(employeeID);
+        user.setTask(task);
+        return user;
     }
 
     private Task getMockTask(Integer taskId, String taskName, Date startDate,
