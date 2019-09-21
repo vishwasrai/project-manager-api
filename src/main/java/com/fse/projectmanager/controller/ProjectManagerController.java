@@ -1,5 +1,6 @@
 package com.fse.projectmanager.controller;
 
+import com.fse.projectmanager.dto.ProjectDto;
 import com.fse.projectmanager.dto.ResponseDto;
 import com.fse.projectmanager.dto.TaskDto;
 import com.fse.projectmanager.dto.UserDto;
@@ -77,6 +78,50 @@ public class ProjectManagerController {
             response = createSuccessResponse(projectManagerService.deleteUser(userId));
         } catch (Exception e) {
             logger.error("There was error while deleting user: " + userId + " Cause: " + e.getMessage());
+        }
+        return response;
+    }
+
+    @DeleteMapping("/deleteTaskById/{taskId}")
+    public ResponseDto deleteTaskById(@PathVariable("taskId") Integer taskId) {
+        ResponseDto response = createFailureResponse();
+        try {
+            response = createSuccessResponse(projectManagerService.deleteTask(taskId));
+        } catch (Exception e) {
+            logger.error("There was error while deleting task: " + taskId + " Cause: " + e.getMessage());
+        }
+        return response;
+    }
+
+    @PostMapping("/saveProject")
+    public ResponseDto saveProject(@RequestBody ProjectDto projectDto) {
+        ResponseDto response = createFailureResponse();
+        try {
+            projectDto = projectManagerService.saveProject(projectDto);
+            response = createSuccessResponse(projectDto);
+        } catch (Exception e) {
+            logger.error("There was error while saving project: " + projectDto.getProject() + " Cause: " + e.getMessage());
+        }
+        return response;
+    }
+
+    @GetMapping("/getAllProjects")
+    public ResponseDto getAllProjects() {
+        try {
+            return createSuccessResponse(projectManagerService.getAllProjects());
+        } catch (Exception e) {
+            logger.error("There was error while retriving all projects. Cause: " + e.getMessage());
+            return createFailureResponse();
+        }
+    }
+
+    @DeleteMapping("/deleteProjectById/{projectId}")
+    public ResponseDto deleteProjectById(@PathVariable("projectId") Integer projectId) {
+        ResponseDto response = createFailureResponse();
+        try {
+            response = createSuccessResponse(projectManagerService.deleteProject(projectId));
+        } catch (Exception e) {
+            logger.error("There was error while deleting project: " + projectId + " Cause: " + e.getMessage());
         }
         return response;
     }

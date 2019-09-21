@@ -30,7 +30,7 @@ public class TaskDto {
         this.task = task;
     }
 
-    public TaskDto(Integer taskId, String task, Boolean thisIsParent, Integer priority, Integer parentTaskId, String startDate, String endDate, Integer userId, String status) {
+    public TaskDto(Integer taskId, Integer projectId, String task, Boolean thisIsParent, Integer priority, Integer parentTaskId, String startDate, String endDate, Integer userId, String status) {
         this.taskId = taskId;
         this.projectId = projectId;
         this.task = task;

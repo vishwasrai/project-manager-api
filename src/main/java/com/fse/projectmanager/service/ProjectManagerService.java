@@ -1,5 +1,6 @@
 package com.fse.projectmanager.service;
 
+import com.fse.projectmanager.dto.ProjectDto;
 import com.fse.projectmanager.dto.TaskDto;
 import com.fse.projectmanager.dto.UserDto;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,15 @@ public interface ProjectManagerService {
 
     Boolean deleteUser(Integer userId);
 
+    ProjectDto saveProject(ProjectDto projectDto);
+
+    List<ProjectDto> getAllProjects();
+
+    Boolean deleteProject(Integer projectId);
+
     TaskDto saveTask(TaskDto taskDto);
+
+    Boolean deleteTask(Integer taskId);
 
     List<TaskDto> getAllTasks();
 

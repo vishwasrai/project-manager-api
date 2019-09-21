@@ -30,6 +30,11 @@ public class User {
     private String employeeId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "Project_ID", nullable = true)
+    @JsonBackReference
+    private Project project;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "Task_ID", nullable = true)
     @JsonBackReference
     private Task task;
@@ -64,6 +69,14 @@ public class User {
 
     public void setEmployeeId(String employeeId) {
         this.employeeId = employeeId;
+    }
+
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
     }
 
     public Task getTask() {

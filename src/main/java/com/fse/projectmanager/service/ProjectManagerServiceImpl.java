@@ -1,11 +1,14 @@
 package com.fse.projectmanager.service;
 
+import com.fse.projectmanager.dto.ProjectDto;
 import com.fse.projectmanager.dto.TaskDto;
 import com.fse.projectmanager.dto.UserDto;
 import com.fse.projectmanager.entity.ParentTask;
+import com.fse.projectmanager.entity.Project;
 import com.fse.projectmanager.entity.Task;
 import com.fse.projectmanager.entity.User;
 import com.fse.projectmanager.repository.ParentTaskRepository;
+import com.fse.projectmanager.repository.ProjectRepository;
 import com.fse.projectmanager.repository.TaskRepository;
 import com.fse.projectmanager.repository.UserRepository;
 import com.fse.projectmanager.utils.DateConverter;
@@ -21,6 +24,9 @@ public class ProjectManagerServiceImpl implements ProjectManagerService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProjectRepository projectRepository;
 
     @Autowired
     private TaskRepository taskRepository;
@@ -55,6 +61,11 @@ public class ProjectManagerServiceImpl implements ProjectManagerService {
     public List<UserDto> getAvailableManagers() {
         List<UserDto> userDtos = new ArrayList<>();
 
+        List<User> users = userRepository.findAllByProjectIsNull();
+        for (User user : users) {
+            userDtos.add(userEntityToDto(user));
+        }
+
         return userDtos;
     }
 
@@ -75,6 +86,61 @@ public class ProjectManagerServiceImpl implements ProjectManagerService {
                 throw new RuntimeException("Invalid UserID passed");
             }
             userRepository.deleteById(userId);
+        } catch (Exception e) {
+            throw e;
+        }
+        return true;
+    }
+
+    @Override
+    public ProjectDto saveProject(ProjectDto projectDto) {
+        try {
+            Project project = projectDtoToEntity(projectDto);
+            project = projectRepository.save(project);
+            projectDto.setProjectId(project.getProjectId());
+            User user = userRepository.findByProject(project);
+            if (user != null) {
+                user.setProject(null);
+                userRepository.save(user);
+            }
+            user = userRepository.findById(projectDto.getManagerId()).orElse(null);
+            if (user != null) {
+                user.setProject(project);
+                userRepository.save(user);
+            }
+        } catch (Exception e) {
+            throw e;
+        }
+        return projectDto;
+    }
+
+    @Override
+    public List<ProjectDto> getAllProjects() {
+        List<ProjectDto> projectDtos = new ArrayList<>();
+        try {
+            List<Project> projects = (List<Project>) projectRepository.findAll();
+            for (Project project : projects) {
+                projectDtos.add(projectEntityToDto(project));
+            }
+        } catch (Exception e) {
+            throw e;
+        }
+        return projectDtos;
+    }
+
+    @Override
+    public Boolean deleteProject(Integer projectId) {
+        try {
+            if (projectId == null || projectId <= 0) {
+                throw new RuntimeException("Invalid UserID passed");
+            }
+            Project project = projectRepository.findById(projectId).get();
+            User user = userRepository.findByProject(project);
+            if (user != null) {
+                user.setProject(null);
+                userRepository.save(user);
+            }
+            projectRepository.delete(project);
         } catch (Exception e) {
             throw e;
         }
@@ -133,6 +199,19 @@ public class ProjectManagerServiceImpl implements ProjectManagerService {
         return taskDto;
     }
 
+    @Override
+    public Boolean deleteTask(Integer taskId) {
+        try {
+            if (taskId == null || taskId <= 0) {
+                throw new RuntimeException("Invalid TaskID passed");
+            }
+            taskRepository.deleteById(taskId);
+        } catch (Exception e) {
+            throw e;
+        }
+        return true;
+    }
+
     private User userDtoToEntity(UserDto userDto) {
 
 
@@ -142,6 +221,12 @@ public class ProjectManagerServiceImpl implements ProjectManagerService {
         user.setFirstName(userDto.getFirstName());
         user.setLastName(userDto.getLastName());
         user.setEmployeeId(userDto.getEmployeeId());
+
+
+
+
+
+
         return user;
     }
 
@@ -157,6 +242,48 @@ public class ProjectManagerServiceImpl implements ProjectManagerService {
         return userDto;
     }
 
+    private ProjectDto projectEntityToDto(Project project) {
+        ProjectDto projectDto = new ProjectDto();
+
+        projectDto.setProjectId(project.getProjectId());
+        projectDto.setProject(project.getProject());
+        projectDto.setPriority(project.getPriority());
+        projectDto.setStartDate(DateConverter.convert(project.getStartDate()));
+        projectDto.setEndDate(DateConverter.convert(project.getEndDate()));
+
+        projectDto.setManager(userEntityToDto(userRepository.findByProject(project)));
+        projectDto.setManagerId(projectDto.getManager() != null ? projectDto.getManager().getUserId() : null);
+
+        projectDto.setCompleted(project.getEndDate() != null ? (project.getEndDate().compareTo(new Date()) == -1) : false);
+
+        int completedTasks = 0;
+        List<TaskDto> taskDtos = new ArrayList<>();
+        for (Task task : project.getTasks()) {
+            taskDtos.add(taskEntityToDto(task));
+            if (task.getStatus() != null && task.getStatus().equalsIgnoreCase("completed")) {
+                completedTasks = completedTasks + 1;
+            }
+        }
+        projectDto.setTasks(taskDtos);
+        projectDto.setNoOfCompletedTasks(completedTasks);
+        projectDto.setNoOfTasks(project.getTasks().size());
+        projectDto.setSetStartAndEndDate(project.getEndDate() != null ? (project.getEndDate().compareTo(new Date()) == 0) : false);
+
+        return projectDto;
+    }
+
+    private Project projectDtoToEntity(ProjectDto projectDto) {
+
+        Project project = new Project();
+        project.setProjectId(projectDto.getProjectId());
+        project.setProject(projectDto.getProject());
+        project.setPriority(projectDto.getPriority());
+        project.setStartDate(DateConverter.convert(projectDto.getStartDate()));
+        project.setEndDate(DateConverter.convert(projectDto.getEndDate()));
+
+        return project;
+    }
+
     private TaskDto taskEntityToDto(Task task) {
         TaskDto taskDto = new TaskDto();
 
@@ -170,6 +297,10 @@ public class ProjectManagerServiceImpl implements ProjectManagerService {
         taskDto.setPriority(task.getPriority());
         taskDto.setStartDate(DateConverter.convert(task.getStartDate()));
         taskDto.setStatus(task.getStatus());
+        if (task.getProject() != null) {
+            taskDto.setProjectId(task.getProject().getProjectId());
+            taskDto.setProjectName(task.getProject().getProject());
+        }
         User user = userRepository.findByTask(task);
         if (user != null) {
             taskDto.setUserId(user.getUserId());
@@ -197,6 +328,7 @@ public class ProjectManagerServiceImpl implements ProjectManagerService {
             task.setParent(taskRepository.findById(taskDto.getParentTaskId()).get());
         }
         task.setPriority(taskDto.getPriority());
+        task.setProject(projectRepository.findById(taskDto.getProjectId()).get());
         task.setStartDate(DateConverter.convert(taskDto.getStartDate()));
         task.setStatus(taskDto.getStatus());
 
