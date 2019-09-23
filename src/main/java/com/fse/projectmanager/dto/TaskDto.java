@@ -25,11 +25,6 @@ public class TaskDto {
 
     }
 
-    public TaskDto(Integer taskId, String task) {
-        this.taskId = taskId;
-        this.task = task;
-    }
-
     public TaskDto(Integer taskId, Integer projectId, String task, Boolean thisIsParent, Integer priority, Integer parentTaskId, String startDate, String endDate, Integer userId, String status) {
         this.taskId = taskId;
         this.projectId = projectId;

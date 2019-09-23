@@ -349,28 +349,29 @@ public class ProjectManagerControllerIntegrationTest {
     }
 
     private User getMockUser(Integer userId, String firstName, String lastName, String employeeID, Task task, Project project) {
-        User user = new User();
-        user.setUserId(userId);
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setEmployeeId(employeeID);
-        user.setTask(task);
-        user.setProject(project);
-        return user;
+        return User.builder()
+                .userId(userId)
+                .firstName(firstName)
+                .lastName(lastName)
+                .employeeId(employeeID)
+                .task(task)
+                .project(project)
+                .build();
     }
 
     private Project getMockProject(Integer projectId, String projectName, Date startDate,
                                    Date endDate, Boolean startDateIsEndDate,
                                    Integer priority, User manager) {
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setProject(projectName);
-        project.setEndDate(endDate);
-        project.setStartDate(startDate);
-        project.setPriority(priority);
-
-        return project;
+        return Project.builder()
+                .projectId(projectId)
+                .project(projectName)
+                .priority(priority)
+                .startDate(startDate)
+                .endDate(endDate)
+                .priority(priority)
+                .build();
     }
+
     private Task getMockTask(Integer taskId, String taskName, Date startDate,
                              Date endDate, Integer priority, String status,
                              Project project, Task parentTask) {

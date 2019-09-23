@@ -82,17 +82,6 @@ public class ProjectManagerController {
         return response;
     }
 
-    @DeleteMapping("/deleteTaskById/{taskId}")
-    public ResponseDto deleteTaskById(@PathVariable("taskId") Integer taskId) {
-        ResponseDto response = createFailureResponse();
-        try {
-            response = createSuccessResponse(projectManagerService.deleteTask(taskId));
-        } catch (Exception e) {
-            logger.error("There was error while deleting task: " + taskId + " Cause: " + e.getMessage());
-        }
-        return response;
-    }
-
     @PostMapping("/saveProject")
     public ResponseDto saveProject(@RequestBody ProjectDto projectDto) {
         ResponseDto response = createFailureResponse();

@@ -199,47 +199,27 @@ public class ProjectManagerServiceImpl implements ProjectManagerService {
         return taskDto;
     }
 
-    @Override
-    public Boolean deleteTask(Integer taskId) {
-        try {
-            if (taskId == null || taskId <= 0) {
-                throw new RuntimeException("Invalid TaskID passed");
-            }
-            taskRepository.deleteById(taskId);
-        } catch (Exception e) {
-            throw e;
-        }
-        return true;
-    }
-
     private User userDtoToEntity(UserDto userDto) {
 
-
-        User user = new User();
-
-        user.setUserId(userDto.getUserId());
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
-        user.setEmployeeId(userDto.getEmployeeId());
-
-
-
-
-
-
-        return user;
+        return User.builder()
+                .userId(userDto.getUserId())
+                .firstName(userDto.getFirstName())
+                .lastName(userDto.getLastName())
+                .employeeId(userDto.getEmployeeId())
+                .build();
     }
 
     private UserDto userEntityToDto(User user) {
         if (user == null) {
             return null;
         }
-        UserDto userDto = new UserDto();
-        userDto.setUserId(user.getUserId());
-        userDto.setFirstName(user.getFirstName());
-        userDto.setLastName(user.getLastName());
-        userDto.setEmployeeId(user.getEmployeeId());
-        return userDto;
+
+        return UserDto.builder()
+                .userId(user.getUserId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .employeeId(user.getEmployeeId())
+                .build();
     }
 
     private ProjectDto projectEntityToDto(Project project) {
@@ -273,15 +253,13 @@ public class ProjectManagerServiceImpl implements ProjectManagerService {
     }
 
     private Project projectDtoToEntity(ProjectDto projectDto) {
-
-        Project project = new Project();
-        project.setProjectId(projectDto.getProjectId());
-        project.setProject(projectDto.getProject());
-        project.setPriority(projectDto.getPriority());
-        project.setStartDate(DateConverter.convert(projectDto.getStartDate()));
-        project.setEndDate(DateConverter.convert(projectDto.getEndDate()));
-
-        return project;
+        return Project.builder()
+                .projectId(projectDto.getProjectId())
+                .project(projectDto.getProject())
+                .priority(projectDto.getPriority())
+                .startDate(DateConverter.convert(projectDto.getStartDate()))
+                .endDate(DateConverter.convert(projectDto.getEndDate()))
+                .build();
     }
 
     private TaskDto taskEntityToDto(Task task) {

@@ -23,8 +23,6 @@ public interface ProjectManagerService {
 
     TaskDto saveTask(TaskDto taskDto);
 
-    Boolean deleteTask(Integer taskId);
-
     List<TaskDto> getAllTasks();
 
     List<UserDto> getAvailableManagers();
